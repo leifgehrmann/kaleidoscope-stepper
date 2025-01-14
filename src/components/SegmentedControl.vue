@@ -207,11 +207,11 @@ onMounted(() => {
           class="
             p-2
             absolute
-            bg-black
-            bg-opacity-20
+            bg-white
             dark:bg-white
             dark:bg-opacity-20
             rounded-lg
+            shadow-lg
             dark:shadow-lg
             transform
             transition-transform ease-out duration-300
