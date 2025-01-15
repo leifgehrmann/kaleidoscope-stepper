@@ -4,11 +4,11 @@ import SegmentedControl from './components/SegmentedControl.vue';
 import {ref} from 'vue';
 
 const options = [
-    'No Bounces',
-    '1st Bounce',
-    '2nd Bounce',
-    '3rd Bounce',
-    '4th Bounce',
+    'None',
+    '1',
+    '2',
+    '3',
+    '∞',
 ];
 
 const selectedIndex = ref(0);
@@ -19,7 +19,7 @@ const selectedIndex = ref(0);
   <canvas
     id="maincanvas"
     ref="canvas"
-    class="bg-gray-200 dark:bg-gray-900"
+    class="bg-gray-100 dark:bg-gray-900"
     style="width:100dvw;height:100dvh;object-fit:cover"
   />
   <div
@@ -34,7 +34,6 @@ const selectedIndex = ref(0);
         gap-2
         items-center
         p-2
-        px-3
         cursor-pointer
         relative
         bg-neutral-300
@@ -43,18 +42,26 @@ const selectedIndex = ref(0);
         dark:bg-opacity-70
         dark:shadow-none
         backdrop-blur-xl
-        rounded-lg
+        rounded-full
         text-sm
         overflow-hidden
         justify-between
       "
     >
-      <span>Show mirror edges</span>
-      <input
-        id="mirrorEdges"
-        class="p-2 cursor-pointer"
-        type="checkbox"
+      <span class="pl-2">Show mirror edges:</span>
+<!--      <input-->
+<!--        id="mirrorEdges"-->
+<!--        class="p-2 cursor-pointer"-->
+<!--        type="checkbox"-->
+<!--      >-->
+      <div
+        class="h-7 w-12 bg-gray-400/70 dark:bg-green-500 flex dark:justify-end rounded-full p-1 overflow-hidden"
       >
+        <div
+          class="h-5 w-5 hover:w-6 transition-all bg-white shadow-md rounded-full"
+        >
+        </div>
+      </div>
     </label>
   </div>
   <div
@@ -80,8 +87,13 @@ const selectedIndex = ref(0);
         justify-between
       "
     >
+      <span
+          class="h-full w-full px-2 text-center basis-1/6"
+      >
+        Reflections:
+      </span>
       <SegmentedControl
-        class="w-full"
+        class="w-full basis-5/6"
         :options="options"
         :selected-index="selectedIndex"
         @update:selected-index="selectedIndex = $event"
