@@ -8,7 +8,7 @@ const options = [
     '1',
     '2',
     '3',
-    '∞',
+    '4+',
 ];
 
 const selectedIndex = ref(0);
@@ -27,7 +27,6 @@ const selectedIndex = ref(0);
     style="top:calc(env(safe-area-inset-top))"
   >
     <label
-      ref="controls-bar"
       for="mirrorEdges"
       class="
         flex flex-row
@@ -36,24 +35,20 @@ const selectedIndex = ref(0);
         p-2
         cursor-pointer
         relative
-        bg-neutral-300
-        bg-opacity-50
-        dark:bg-neutral-900
-        dark:bg-opacity-70
+        bg-white
+
+        dark:bg-black
         dark:shadow-none
+
         backdrop-blur-xl
-        rounded-full
+        rounded-xl
         text-sm
         overflow-hidden
         justify-between
+        shadow-md
       "
     >
       <span class="pl-2">Show mirror edges:</span>
-<!--      <input-->
-<!--        id="mirrorEdges"-->
-<!--        class="p-2 cursor-pointer"-->
-<!--        type="checkbox"-->
-<!--      >-->
       <div
         class="h-7 w-12 bg-gray-400/70 dark:bg-green-500 flex dark:justify-end rounded-full p-1 overflow-hidden"
       >
@@ -75,29 +70,49 @@ const selectedIndex = ref(0);
         items-center
         p-1
         relative
-        bg-neutral-300
-        bg-opacity-50
-        dark:bg-neutral-900
-        dark:bg-opacity-70
+        bg-white
+
+        dark:bg-black
         dark:shadow-none
         backdrop-blur-xl
         rounded-xl
         text-sm
         overflow-hidden
         justify-between
+        gap-2
+        shadow-md
       "
     >
       <span
-          class="h-full w-full px-2 text-center basis-1/6"
+        class="pl-2 flex basis-1/6 text-center items-center justify-center"
       >
         Reflections:
       </span>
-      <SegmentedControl
-        class="w-full basis-5/6"
-        :options="options"
-        :selected-index="selectedIndex"
-        @update:selected-index="selectedIndex = $event"
-      />
+      <div
+        class="
+          w-full flex flex-row
+          basis-5/6
+          items-center
+          p-1
+          relative
+          bg-neutral-200
+          dark:bg-gray-900
+          dark:shadow-none
+          backdrop-blur-xl
+          rounded-lg
+          text-sm
+          overflow-hidden
+          justify-between
+          gap-2
+        "
+      >
+        <SegmentedControl
+          class="w-full"
+          :options="options"
+          :selected-index="selectedIndex"
+          @update:selected-index="selectedIndex = $event"
+        />
+      </div>
     </div>
   </div>
 </template>
