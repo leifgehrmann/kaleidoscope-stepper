@@ -2,6 +2,7 @@
 
 import SegmentedControl from './components/SegmentedControl.vue';
 import {ref} from 'vue';
+import Switch from './components/Switch.vue';
 
 const options = [
     'None',
@@ -12,6 +13,7 @@ const options = [
 ];
 
 const selectedIndex = ref(0);
+const showMirrorEdges = ref(false);
 
 </script>
 
@@ -47,16 +49,14 @@ const selectedIndex = ref(0);
         justify-between
         shadow-md
       "
+      @click="showMirrorEdges = !showMirrorEdges"
     >
       <span class="pl-2">Show mirror edges:</span>
-      <div
-        class="h-7 w-12 bg-gray-400/70 dark:bg-green-500 flex dark:justify-end rounded-full p-1 overflow-hidden"
-      >
-        <div
-          class="h-5 w-5 hover:w-6 transition-all bg-white shadow-md rounded-full"
-        >
-        </div>
-      </div>
+      <Switch
+        :checked="showMirrorEdges"
+        @update="showMirrorEdges = $event"
+        @click.stop
+      />
     </label>
   </div>
   <div
