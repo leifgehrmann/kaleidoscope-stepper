@@ -58,10 +58,17 @@ onMounted(() => {
       return abs((b.y - a.y) * p.x - (b.x - a.x) * p.y + b.x * a.y - b.y * a.x) / pythagoras(a, b);
     }
 
-    // https://math.stackexchange.com/questions/3315419/finding-the-position-of-a-point-on-the-line
+    // https://stackoverflow.com/questions/65282981/get-perpendicular-to-line-from-point
     vec2 closestPointFromPointToLine(vec2 a, vec2 b, vec2 p) {
+      float dx = b.x - a.x;
+      float dy = b.y - a.y;
+      float dotp = dx * (p.x - a.x) + dy * (p.y - a.y);
+      float dot12 = dx * dx + dy * dy;
+      float coeff = dotp / dot12;
+
       return vec2(
-        0.0,0.0
+        a.x + dx * coeff,
+        a.y + dy * coeff
       );
     }
 
@@ -125,18 +132,25 @@ onMounted(() => {
         sin(sectorEndAngle),
         cos(sectorEndAngle)
       );
-      float distanceFromPointToSectorLine = distanceFromPointToLine(
-        sectorEndPoint,
+      vec2 closestPointFromPointToSectorLine = closestPointFromPointToLine(
         sectorStartPoint,
-        //sectorEndPoint,
+        sectorEndPoint,
         k
       );
+      float distanceFromPointToSectorLine = distanceFromPointToLine(
+        sectorStartPoint,
+        sectorEndPoint,
+        k
+      );
+      if (pythagoras(closestPointFromPointToSectorLine, vec2(0.0,0.0)) > pythagoras(k, vec2(0.0))) {
+        gl_FragColor=vec4(abs(k.x), abs(k.y), 0.0, 1.0);
+      }
       // if (distanceFromPointToSectorLine < pythagoras(k, vec2(0.0))) {
       //   gl_FragColor=vec4(abs(k.x), abs(k.y), 0.0, 1.0);
       //   return;
       // }
       // if (distanceFromPointToSectorLine < 0.2) {
-        gl_FragColor=vec4(abs(k.x), abs(k.y), distanceFromPointToSectorLine * 100.0, 1.0);
+        // gl_FragColor=vec4(abs(k.x), abs(k.y), distanceFromPointToSectorLine * 100.0, 1.0);
       // }
 
       // gl_FragColor=vec4(abs(k.x), abs(k.y), sector / sides, 1.0);
