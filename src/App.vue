@@ -3,6 +3,7 @@
 import SegmentedControl from './components/SegmentedControl.vue';
 import {ref} from 'vue';
 import Switch from './components/Switch.vue';
+import Kaleidoscope from './components/Kaleidoscope.vue';
 
 const options = [
     'None',
@@ -18,12 +19,7 @@ const showMirrorEdges = ref(false);
 </script>
 
 <template>
-  <canvas
-    id="maincanvas"
-    ref="canvas"
-    class="bg-gray-100 dark:bg-gray-900"
-    style="width:100dvw;height:100dvh;object-fit:cover"
-  />
+  <Kaleidoscope />
   <div
     class="absolute w-full flex flex-col justify-end gap-1 px-2 py-2 items-center"
     style="top:calc(env(safe-area-inset-top))"
