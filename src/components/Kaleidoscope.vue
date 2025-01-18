@@ -48,6 +48,8 @@ onMounted(() => {
 
     uniform vec2 canvasDimensions;
     uniform vec2 elementDimensions;
+    int maxReflections = 3;
+    float sides = 5.0;
 
     float pythagoras(vec2 a, vec2 b) {
       return sqrt((b.y - a.y) * (b.y - a.y) + (b.x - a.x) * (b.x - a.x));
@@ -70,6 +72,40 @@ onMounted(() => {
         a.x + dx * coeff,
         a.y + dy * coeff
       );
+    }
+
+    vec2 reflect(vec2 pos, float rotationOffset) {
+      float theta = atan(pos.y, pos.x) + rotationOffset;
+      float sector = floor((theta) / (2.0 * PI) * sides);
+      float sectorThetaSize = (1.0 / sides) * PI * 2.0;
+      float sectorStartAngle = (sector - 0.0) * sectorThetaSize - rotationOffset;
+      float sectorEndAngle = (sector + 1.0) * sectorThetaSize - rotationOffset;
+      vec2 sectorStartPoint = vec2(
+        cos(sectorStartAngle),
+        sin(sectorStartAngle)
+      );
+      vec2 sectorEndPoint = vec2(
+        cos(sectorEndAngle),
+        sin(sectorEndAngle)
+      );
+      vec2 closestPointFromPointToSectorLine = closestPointFromPointToLine(
+        sectorStartPoint,
+        sectorEndPoint,
+        pos
+      );
+      float distanceFromPointToSectorLine = distanceFromPointToLine(
+        sectorStartPoint,
+        sectorEndPoint,
+        pos
+      );
+      if (pythagoras(closestPointFromPointToSectorLine, vec2(0.0,0.0)) < pythagoras(pos, vec2(0.0, 0.0))) {
+        return vec2(
+          pos.x + (closestPointFromPointToSectorLine.x - pos.x) * 2.0,
+          pos.y + (closestPointFromPointToSectorLine.y - pos.y) * 2.0
+        );
+      } else {
+        return pos;
+      }
     }
 
     void main() {
@@ -98,40 +134,58 @@ onMounted(() => {
       k.y *= 2.0;
 
       // Todo: Control the scale of the image at this stage.
-      float scale = 2.0;
+      float scale = 6.0;
       k.x *= scale;
       k.y *= scale;
 
+      // Todo: Control the rotation of the image.
+      float rotationOffset = -PI / 4.0;
+      if (sides < 4.0) {
+        rotationOffset = -PI / 2.0;
+      }
+      // k = vec2(
+      //   k.x * cos(rotationOffset) - k.y * sin(rotationOffset),
+      //   k.x * sin(rotationOffset) + k.y * cos(rotationOffset)
+      // );
+
       // Debug: Draw a circle.
-      if (sqrt(k.x * k.x + k.y * k.y) > 1.0) {
-        gl_FragColor=vec4(k.x, k.y, 0.5, 0.001);
+      // if (sqrt(k.x * k.x + k.y * k.y) > 1.0) {
+      //   gl_FragColor=vec4(k.x, k.y, 0.5, 0.001);
+      //   return;
+      // }
+
+      // Debug: Draw a triangle.
+      float offset2 = rotationOffset;
+      float theta = atan(k.y, k.x) + offset2;
+      float sector = floor((theta) / (2.0 * PI) * sides);
+      float sectorThetaSize = (1.0 / sides) * PI * 2.0;
+      float sectorStartAngle = (sector - 0.0) * sectorThetaSize - offset2;
+      float sectorEndAngle = (sector + 1.0) * sectorThetaSize - offset2;
+      vec2 sectorStartPoint = vec2(
+        cos(sectorStartAngle),
+        sin(sectorStartAngle)
+      );
+      vec2 sectorEndPoint = vec2(
+        cos(sectorEndAngle),
+        sin(sectorEndAngle)
+      );
+
+      // Debug: Highlight sectorPoints
+      if (
+        k.x < sectorStartPoint.x + 0.1 && k.x > sectorStartPoint.x - 0.1 &&
+        k.y < sectorStartPoint.y + 0.1 && k.y > sectorStartPoint.y - 0.1
+      ) {
+        gl_FragColor=vec4(0.0, 1.0, 1.0, 1.0);
+        return;
+      }
+      if (
+        k.x < sectorEndPoint.x + 0.1 && k.x > sectorEndPoint.x - 0.1 &&
+        k.y < sectorEndPoint.y + 0.1 && k.y > sectorEndPoint.y - 0.1
+      ) {
+        gl_FragColor=vec4(1.0, 0.0, 1.0, 1.0);
         return;
       }
 
-      float sides = 3.0;
-
-      // Debug: Draw a triangle.
-      float theta = atan(k.x, k.y);
-      float csc = 1.0 / sin(theta - 0.1);
-      // Split the theta into thirds
-      // if (sqrt(k.x * k.x + k.y * k.y) > csc * 0.5) {
-      //    gl_FragColor=vec4(k.x, k.y, 0.0, 0.001);
-      //    return;
-      // }
-      // sector
-      float sector = floor((theta) / (2.0 * PI) * sides);
-      // if (theta % sides)
-      float sectorThetaSize = (1.0 / sides) * PI * 2.0;
-      float sectorStartAngle = sector * sectorThetaSize;
-      float sectorEndAngle = (sector + 1.0) * sectorThetaSize;
-      vec2 sectorStartPoint = vec2(
-        sin(sectorStartAngle),
-        cos(sectorStartAngle)
-      );
-      vec2 sectorEndPoint = vec2(
-        sin(sectorEndAngle),
-        cos(sectorEndAngle)
-      );
       vec2 closestPointFromPointToSectorLine = closestPointFromPointToLine(
         sectorStartPoint,
         sectorEndPoint,
@@ -142,7 +196,26 @@ onMounted(() => {
         sectorEndPoint,
         k
       );
-      if (pythagoras(closestPointFromPointToSectorLine, vec2(0.0,0.0)) > pythagoras(k, vec2(0.0))) {
+      if (pythagoras(closestPointFromPointToSectorLine, vec2(0.0,0.0)) < pythagoras(k, vec2(0.0, 0.0))) {
+        for(int i = 0; i < 1; i ++) {
+          if (i > maxReflections) {
+            break;
+          }
+          // float angleToPerpendicular = atan(k.y - closestPointFromPointToSectorLine.y, k.x - closestPointFromPointToSectorLine.x);
+          // k.x -= cos(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
+          // k.y -= sin(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
+
+          k = reflect(k, rotationOffset);
+          k = reflect(k, rotationOffset);
+          k = reflect(k, rotationOffset);
+          k = reflect(k, rotationOffset);
+          // k.x += (closestPointFromPointToSectorLine.x - k.x) * 2.0;
+          // k.y += (closestPointFromPointToSectorLine.y - k.y) * 2.0;
+          // k.x = 0.0;
+          // k.x = 0.0;
+        }
+        gl_FragColor=vec4(abs(k.x), abs(k.y), 0.0, 1.0);
+      } else {
         gl_FragColor=vec4(abs(k.x), abs(k.y), 0.0, 1.0);
       }
       // if (distanceFromPointToSectorLine < pythagoras(k, vec2(0.0))) {
