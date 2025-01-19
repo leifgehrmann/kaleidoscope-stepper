@@ -99,13 +99,47 @@ onMounted(() => {
         pos
       );
       if (pythagoras(closestPointFromPointToSectorLine, vec2(0.0,0.0)) < pythagoras(pos, vec2(0.0, 0.0))) {
+        float angleToPerpendicular = atan(pos.y - closestPointFromPointToSectorLine.y, pos.x - closestPointFromPointToSectorLine.x);
+        // k.x -= cos(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
+        // k.y -= sin(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
         return vec2(
-          pos.x + (closestPointFromPointToSectorLine.x - pos.x) * 2.0,
-          pos.y + (closestPointFromPointToSectorLine.y - pos.y) * 2.0
+          pos.x - cos(angleToPerpendicular) * distanceFromPointToSectorLine * 2.0,
+          pos.y - sin(angleToPerpendicular) * distanceFromPointToSectorLine * 2.0
         );
+        // return vec2(
+        //   pos.x + (closestPointFromPointToSectorLine.x - pos.x) * 2.0,
+        //   pos.y + (closestPointFromPointToSectorLine.y - pos.y) * 2.0
+        // );
       } else {
         return pos;
       }
+    }
+
+    bool onMirror(vec2 pos, float rotationOffset) {
+      float theta = atan(pos.y, pos.x) + rotationOffset;
+      float sector = floor((theta) / (2.0 * PI) * sides);
+      float sectorThetaSize = (1.0 / sides) * PI * 2.0;
+      float sectorStartAngle = (sector - 0.0) * sectorThetaSize - rotationOffset;
+      float sectorEndAngle = (sector + 1.0) * sectorThetaSize - rotationOffset;
+      vec2 sectorStartPoint = vec2(
+        cos(sectorStartAngle),
+        sin(sectorStartAngle)
+      );
+      vec2 sectorEndPoint = vec2(
+        cos(sectorEndAngle),
+        sin(sectorEndAngle)
+      );
+      vec2 closestPointFromPointToSectorLine = closestPointFromPointToLine(
+        sectorStartPoint,
+        sectorEndPoint,
+        pos
+      );
+      float distanceFromPointToSectorLine = distanceFromPointToLine(
+        sectorStartPoint,
+        sectorEndPoint,
+        pos
+      );
+      return pythagoras(closestPointFromPointToSectorLine, vec2(0.0,0.0)) < pythagoras(pos, vec2(0.0, 0.0));
     }
 
     void main() {
@@ -134,12 +168,15 @@ onMounted(() => {
       k.y *= 2.0;
 
       // Todo: Control the scale of the image at this stage.
-      float scale = 6.0;
+      float scale = 10.0;
       k.x *= scale;
       k.y *= scale;
 
       // Todo: Control the rotation of the image.
-      float rotationOffset = -PI / 4.0;
+      float rotationOffset = -PI / 10.0;
+      if (sides < 5.0) {
+        rotationOffset = -PI / 4.0;
+      }
       if (sides < 4.0) {
         rotationOffset = -PI / 2.0;
       }
@@ -207,26 +244,26 @@ onMounted(() => {
 
           k = reflect(k, rotationOffset);
           k = reflect(k, rotationOffset);
-          k = reflect(k, rotationOffset);
-          k = reflect(k, rotationOffset);
+          // k = reflect(k, rotationOffset);
+          // k = reflect(k, rotationOffset);
           // k.x += (closestPointFromPointToSectorLine.x - k.x) * 2.0;
           // k.y += (closestPointFromPointToSectorLine.y - k.y) * 2.0;
           // k.x = 0.0;
           // k.x = 0.0;
         }
-        gl_FragColor=vec4(abs(k.x), abs(k.y), 0.0, 1.0);
-      } else {
-        gl_FragColor=vec4(abs(k.x), abs(k.y), 0.0, 1.0);
-      }
-      // if (distanceFromPointToSectorLine < pythagoras(k, vec2(0.0))) {
-      //   gl_FragColor=vec4(abs(k.x), abs(k.y), 0.0, 1.0);
-      //   return;
-      // }
-      // if (distanceFromPointToSectorLine < 0.2) {
-        // gl_FragColor=vec4(abs(k.x), abs(k.y), distanceFromPointToSectorLine * 100.0, 1.0);
-      // }
 
-      // gl_FragColor=vec4(abs(k.x), abs(k.y), sector / sides, 1.0);
+      } else {
+        // gl_FragColor=vec4(abs(k.x), abs(k.y), 0.0, 1.0);
+      }
+
+      // Are we still
+      if (onMirror(k, rotationOffset)) {
+        gl_FragColor=vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+      }
+
+      //gl_FragColor=vec4((k.x), (k.y), 0.0, 1.0);
+      gl_FragColor=vec4((k.x + 1.0) / 2.0, (k.y + 1.0) / 2.0, 0.0, 1.0);
     }
   `);
   gl.compileShader(fshader);
@@ -258,9 +295,13 @@ window.addEventListener('resize', () => {
 
 <template>
   <canvas
-    id="maincanvas"
     ref="canvas"
     class="bg-gray-200 dark:bg-gray-900"
+    style="width:100dvw;height:100dvh;"
+  />
+  <canvas
+    ref="outlines"
+    class="absolute left-0 top-0"
     style="width:100dvw;height:100dvh;"
   />
 </template>
