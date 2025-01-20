@@ -221,79 +221,136 @@ onMounted(() => {
       //   return;
       // }
 
+      // Initialise the ray.
+      vec3 rayPos = vec3(0.0, 0.0, 0.0);
+      vec3 rayDir = pixelToVector(k);
+
+      gl_FragColor=vec4(abs(rayDir.x) - 1.0, abs(rayDir.y) - 1.0, 0.0, 1.0);
+      
+      // // Compute how light should reflect across the various mirrors.
+      // for (int reflections = 0; reflections < 1; reflections++) {
+      //   if (reflections > maxReflections) {
+      //     break;
+      //   }
+      //   // Test for plane intersections. By default,
+      //   // this is the end of the kaleidoscope, with the normal
+      //   // facing towards the eye.
+      //   vec3 nearestPlaneOrigin = vec3(0.0); // TODO
+      //   vec3 nearestPlaneNormal = vec3(0.0); // TODO
+      //   vec3 nearestIntersection = vec3(0.0); // TODO
+      //   for (int side = 0; side < 10; side++) {
+      //     if (side > sides) {
+      //       continue;
+      //     }
+      //     vec3 planeOrigin = vec3(0.0); // TODO
+      //     vec3 planeNormal = vec3(0.0); // TODO
+      //     // Does the ray intersect the side?
+      //     bool intersects = rayPlaneIntersects(
+      //       rayPos,
+      //       rayDir,
+      //       planeOrigin,
+      //       planeNormal
+      //     );
+      //     if (intersects) {
+      //       // Get the intersection point.
+      //       vec3 intersection = rayPlaneIntersection(
+      //         rayPos,
+      //         rayDir,
+      //         planeOrigin,
+      //         planeNormal
+      //       );
+      //       if (intersection.z > nearestIntersection.z) {
+      //         nearestIntersection = intersection;
+      //         nearestPlaneOrigin = planeOrigin;
+      //         nearestPlaneNormal = planeNormal;
+      //       }
+      //     }
+      //   }
+      //   // If the nearest intersection is happening before
+      //   if (nearestIntersection.z >= 0.0) {
+      //     rayPos = intersection;
+      //     break;
+      //   }
+      //   rayPos = intersection;
+      //   // Reflect the ray off of the
+      //   rayDir = vec3(0.0); // TODO
+      // }
+      //
+      // gl_FragColor=vec4(abs(rayPos.x) - 1.0, abs(rayPos.y) - 1.0, 0.0, 1.0);
+
       // Debug: Draw a triangle.
-      float offset2 = rotationOffset;
-      float theta = atan(k.y, k.x) + offset2;
-      float sector = floor((theta) / (2.0 * PI) * sides);
-      float sectorThetaSize = (1.0 / sides) * PI * 2.0;
-      float sectorStartAngle = (sector - 0.0) * sectorThetaSize - offset2;
-      float sectorEndAngle = (sector + 1.0) * sectorThetaSize - offset2;
-      vec2 sectorStartPoint = vec2(
-        cos(sectorStartAngle),
-        sin(sectorStartAngle)
-      );
-      vec2 sectorEndPoint = vec2(
-        cos(sectorEndAngle),
-        sin(sectorEndAngle)
-      );
+      // float offset2 = rotationOffset;
+      // float theta = atan(k.y, k.x) + offset2;
+      // float sector = floor((theta) / (2.0 * PI) * sides);
+      // float sectorThetaSize = (1.0 / sides) * PI * 2.0;
+      // float sectorStartAngle = (sector - 0.0) * sectorThetaSize - offset2;
+      // float sectorEndAngle = (sector + 1.0) * sectorThetaSize - offset2;
+      // vec2 sectorStartPoint = vec2(
+      //   cos(sectorStartAngle),
+      //   sin(sectorStartAngle)
+      // );
+      // vec2 sectorEndPoint = vec2(
+      //   cos(sectorEndAngle),
+      //   sin(sectorEndAngle)
+      // );
 
       // Debug: Highlight sectorPoints
-      if (
-        k.x < sectorStartPoint.x + 0.1 && k.x > sectorStartPoint.x - 0.1 &&
-        k.y < sectorStartPoint.y + 0.1 && k.y > sectorStartPoint.y - 0.1
-      ) {
-        gl_FragColor=vec4(0.0, 1.0, 1.0, 1.0);
-        return;
-      }
-      if (
-        k.x < sectorEndPoint.x + 0.1 && k.x > sectorEndPoint.x - 0.1 &&
-        k.y < sectorEndPoint.y + 0.1 && k.y > sectorEndPoint.y - 0.1
-      ) {
-        gl_FragColor=vec4(1.0, 0.0, 1.0, 1.0);
-        return;
-      }
-
-      vec2 closestPointFromPointToSectorLine = closestPointFromPointToLine(
-        sectorStartPoint,
-        sectorEndPoint,
-        k
-      );
-      float distanceFromPointToSectorLine = distanceFromPointToLine(
-        sectorStartPoint,
-        sectorEndPoint,
-        k
-      );
-      if (pythagoras(closestPointFromPointToSectorLine, vec2(0.0,0.0)) < pythagoras(k, vec2(0.0, 0.0))) {
-        for(int i = 0; i < 1; i ++) {
-          if (i > maxReflections) {
-            break;
-          }
-          // float angleToPerpendicular = atan(k.y - closestPointFromPointToSectorLine.y, k.x - closestPointFromPointToSectorLine.x);
-          // k.x -= cos(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
-          // k.y -= sin(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
-
-          k = reflect(k, rotationOffset);
-          k = reflect(k, rotationOffset);
-          // k = reflect(k, rotationOffset);
-          // k = reflect(k, rotationOffset);
-          // k.x += (closestPointFromPointToSectorLine.x - k.x) * 2.0;
-          // k.y += (closestPointFromPointToSectorLine.y - k.y) * 2.0;
-          // k.x = 0.0;
-          // k.x = 0.0;
-        }
-
-      } else {
-        // gl_FragColor=vec4(abs(k.x), abs(k.y), 0.0, 1.0);
-      }
+      // if (
+      //   k.x < sectorStartPoint.x + 0.1 && k.x > sectorStartPoint.x - 0.1 &&
+      //   k.y < sectorStartPoint.y + 0.1 && k.y > sectorStartPoint.y - 0.1
+      // ) {
+      //   gl_FragColor=vec4(0.0, 1.0, 1.0, 1.0);
+      //   return;
+      // }
+      // if (
+      //   k.x < sectorEndPoint.x + 0.1 && k.x > sectorEndPoint.x - 0.1 &&
+      //   k.y < sectorEndPoint.y + 0.1 && k.y > sectorEndPoint.y - 0.1
+      // ) {
+      //   gl_FragColor=vec4(1.0, 0.0, 1.0, 1.0);
+      //   return;
+      // }
+      //
+      // vec2 closestPointFromPointToSectorLine = closestPointFromPointToLine(
+      //   sectorStartPoint,
+      //   sectorEndPoint,
+      //   k
+      // );
+      // float distanceFromPointToSectorLine = distanceFromPointToLine(
+      //   sectorStartPoint,
+      //   sectorEndPoint,
+      //   k
+      // );
+      // if (pythagoras(closestPointFromPointToSectorLine, vec2(0.0,0.0)) < pythagoras(k, vec2(0.0, 0.0))) {
+      //   for(int i = 0; i < 1; i ++) {
+      //     if (i > maxReflections) {
+      //       break;
+      //     }
+      //     // float angleToPerpendicular = atan(k.y - closestPointFromPointToSectorLine.y, k.x - closestPointFromPointToSectorLine.x);
+      //     // k.x -= cos(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
+      //     // k.y -= sin(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
+      //
+      //     k = reflect(k, rotationOffset);
+      //     k = reflect(k, rotationOffset);
+      //     // k = reflect(k, rotationOffset);
+      //     // k = reflect(k, rotationOffset);
+      //     // k.x += (closestPointFromPointToSectorLine.x - k.x) * 2.0;
+      //     // k.y += (closestPointFromPointToSectorLine.y - k.y) * 2.0;
+      //     // k.x = 0.0;
+      //     // k.x = 0.0;
+      //   }
+      //
+      // } else {
+      //   // gl_FragColor=vec4(abs(k.x), abs(k.y), 0.0, 1.0);
+      // }
 
       // Are we still
-      if (onMirror(k, rotationOffset)) {
-        gl_FragColor=vec4(0.0, 0.0, 0.0, 0.0);
-        return;
-      }
+      // if (onMirror(k, rotationOffset)) {
+      //   gl_FragColor=vec4(0.0, 0.0, 0.0, 0.0);
+      //   return;
+      // }
 
       //gl_FragColor=vec4((k.x), (k.y), 0.0, 1.0);
-      gl_FragColor=vec4((k.x + 1.0) / 2.0, (k.y + 1.0) / 2.0, 0.0, 1.0);
+      // gl_FragColor=vec4((k.x + 1.0) / 2.0, (k.y + 1.0) / 2.0, 0.0, 1.0);
     }
   `);
   gl.compileShader(fshader);
