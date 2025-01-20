@@ -115,6 +115,36 @@ onMounted(() => {
       }
     }
 
+    vec3 pixelToVector(vec2 pos) {
+      return vec3(
+        sqrt(1.0 + pos.x * pos.x) * sign(pos.x),
+        sqrt(1.0 + pos.y * pos.y) * sign(pos.y),
+        1.0
+      );
+    }
+
+    bool rayPlaneIntersects(
+      vec3 rayPos,
+      vec3 rayDir,
+      vec3 planeOrigin,
+      vec3 planeNormal
+    ) {
+      return true;
+    }
+
+    vec3 rayPlaneIntersection(
+      vec3 rayPos,
+      vec3 rayDir,
+      vec3 planeOrigin,
+      vec3 planeNormal
+    ) {
+      return vec3(
+        0.0,
+        0.0,
+        0.0
+      );
+    }
+
     bool onMirror(vec2 pos, float rotationOffset) {
       float theta = atan(pos.y, pos.x) + rotationOffset;
       float sector = floor((theta) / (2.0 * PI) * sides);
