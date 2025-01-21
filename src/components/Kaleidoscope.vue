@@ -115,34 +115,59 @@ onMounted(() => {
       }
     }
 
-    vec3 pixelToVector(vec2 pos) {
-      return vec3(
-        sqrt(1.0 + pos.x * pos.x) * sign(pos.x),
-        sqrt(1.0 + pos.y * pos.y) * sign(pos.y),
-        1.0
+    float distanceFromRayToMirror(
+      vec2 rayPos,
+      vec2 rayDir,
+      vec2 mirrorPointA,
+      vec2 mirrorPointB
+    ) {
+      // https://stackoverflow.com/questions/53893292/how-to-calculate-ray-line-segment-intersection-preferably-in-opencv-and-get-its
+      vec2 v1 = rayPos - mirrorPointA;
+      vec2 v2 = mirrorPointB - mirrorPointA;
+      vec2 v3 = vec2(
+        -rayDir.y,
+        rayDir.x
       );
+
+      float dotProd = dot(v2, v3);
+      if (abs(dotProd) < 0.000001) {
+        return -1.0;
+      }
+
+      float t1 = v2.x * v1.y - v2.y * v1.x / dotProd;
+      float t2 = dot(v1, v3) / dotProd;
+
+      if (t1 >= 0.0 && (t2 >= 0.0 && t2 <= 1.0)) {
+        return t1;
+      }
+
+      return -1.0;
     }
 
-    bool rayPlaneIntersects(
-      vec3 rayPos,
-      vec3 rayDir,
-      vec3 planeOrigin,
-      vec3 planeNormal
-    ) {
-      return true;
-    }
+    // vec2 rayIntersectsMirrorAt(
+    //   vec2 rayPos,
+    //   vec2 rayDir,
+    //   vec2 mirrorPointA,
+    //   vec2 mirrorPointB
+    // ) {
+    //   return vec2(
+    //     0.0,
+    //     0.0
+    //   );
+    // }
 
-    vec3 rayPlaneIntersection(
-      vec3 rayPos,
-      vec3 rayDir,
-      vec3 planeOrigin,
-      vec3 planeNormal
+    vec2 reflectRayOnMirror(
+      vec2 rayDir,
+      vec2 mirrorPointA,
+      vec2 mirrorPointB
     ) {
-      return vec3(
-        0.0,
-        0.0,
-        0.0
-      );
+      // https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector
+      vec2 n = normalize(vec2(
+        -rayDir.y,
+        rayDir.x
+      ));
+
+      return rayDir - 2.0 * dot(rayDir, n) * n;
     }
 
     bool onMirror(vec2 pos, float rotationOffset) {
@@ -222,61 +247,70 @@ onMounted(() => {
       // }
 
       // Initialise the ray.
-      vec3 rayPos = vec3(0.0, 0.0, 0.0);
-      vec3 rayDir = pixelToVector(k);
+      vec2 rayPos = vec2(0.0);
+      vec2 rayDir = k;
+      float surfaceAlpha = 0.0;
 
-      gl_FragColor=vec4(abs(rayDir.x) - 1.0, abs(rayDir.y) - 1.0, 0.0, 1.0);
-      
-      // // Compute how light should reflect across the various mirrors.
-      // for (int reflections = 0; reflections < 1; reflections++) {
-      //   if (reflections > maxReflections) {
-      //     break;
-      //   }
-      //   // Test for plane intersections. By default,
-      //   // this is the end of the kaleidoscope, with the normal
-      //   // facing towards the eye.
-      //   vec3 nearestPlaneOrigin = vec3(0.0); // TODO
-      //   vec3 nearestPlaneNormal = vec3(0.0); // TODO
-      //   vec3 nearestIntersection = vec3(0.0); // TODO
-      //   for (int side = 0; side < 10; side++) {
-      //     if (side > sides) {
-      //       continue;
-      //     }
-      //     vec3 planeOrigin = vec3(0.0); // TODO
-      //     vec3 planeNormal = vec3(0.0); // TODO
-      //     // Does the ray intersect the side?
-      //     bool intersects = rayPlaneIntersects(
-      //       rayPos,
-      //       rayDir,
-      //       planeOrigin,
-      //       planeNormal
-      //     );
-      //     if (intersects) {
-      //       // Get the intersection point.
-      //       vec3 intersection = rayPlaneIntersection(
-      //         rayPos,
-      //         rayDir,
-      //         planeOrigin,
-      //         planeNormal
-      //       );
-      //       if (intersection.z > nearestIntersection.z) {
-      //         nearestIntersection = intersection;
-      //         nearestPlaneOrigin = planeOrigin;
-      //         nearestPlaneNormal = planeNormal;
-      //       }
-      //     }
-      //   }
-      //   // If the nearest intersection is happening before
-      //   if (nearestIntersection.z >= 0.0) {
-      //     rayPos = intersection;
-      //     break;
-      //   }
-      //   rayPos = intersection;
-      //   // Reflect the ray off of the
-      //   rayDir = vec3(0.0); // TODO
-      // }
-      //
-      // gl_FragColor=vec4(abs(rayPos.x) - 1.0, abs(rayPos.y) - 1.0, 0.0, 1.0);
+      // gl_FragColor=vec4(abs(rayDir.x) - 1.0, abs(rayDir.y) - 1.0, 0.0, 1.0);
+
+      // Compute how light should reflect across the various mirrors.
+      for (int reflections = 0; reflections < 2; reflections++) {
+        if (reflections > maxReflections + 1) {
+          break;
+        }
+        // Test for plane intersections. By default,
+        // this is the end of the kaleidoscope, with the normal
+        // facing towards the eye.
+        vec2 nearestMirrorPointA = vec2(0.0);
+        vec2 nearestMirrorPointB = vec2(0.0);
+        float nearestIntersectionDistance = -1.0;
+        for (float side = 0.0; side < 10.0; side++) {
+          if (side > sides) {
+            continue;
+          }
+          vec2 mirrorPointA = vec2(
+            cos((side - 0.5) * 2.0 * PI / sides),
+            sin((side - 0.5) * 2.0 * PI / sides)
+          );
+          vec2 mirrorPointB = vec2(
+            cos((side + 0.5) * 2.0 * PI / sides),
+            sin((side + 0.5) * 2.0 * PI / sides)
+          );
+          // Does the ray intersect the side/mirror?
+          float intersectionDistance = distanceFromRayToMirror(
+            rayPos,
+            rayDir,
+            mirrorPointA,
+            mirrorPointB
+          );
+          if (intersectionDistance >= 0.0 && (nearestIntersectionDistance < intersectionDistance || nearestIntersectionDistance < 0.0)) {
+            nearestIntersectionDistance = intersectionDistance;
+            nearestMirrorPointA = mirrorPointA;
+            nearestMirrorPointB = mirrorPointB;
+          }
+        }
+        // If the rayDir is not long enough to reflect light at
+        // the nearest intersection, then increment the position to the final length of the ray,
+        // then stop the calculation.
+        float rayToMirrorLength = nearestIntersectionDistance;
+        float rayLength = length(rayDir);
+        if (rayToMirrorLength >= rayLength) {
+          rayPos += rayDir;
+          surfaceAlpha = 1.0;
+          break;
+        }
+        rayPos += normalize(rayDir) * nearestIntersectionDistance;
+        rayDir *= (rayLength - rayToMirrorLength) / rayLength;
+
+        // Reflect the ray off of the mirror
+        rayDir = reflectRayOnMirror(
+          rayDir,
+          nearestMirrorPointA,
+          nearestMirrorPointB
+        );
+      }
+
+      gl_FragColor=vec4(abs(rayPos.x) - 1.0, abs(rayPos.y) - 1.0, 0.0, surfaceAlpha);
 
       // Debug: Draw a triangle.
       // float offset2 = rotationOffset;
