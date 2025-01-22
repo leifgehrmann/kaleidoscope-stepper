@@ -52,70 +52,6 @@ onMounted(() => {
     float scale = 30.0;
     float sides = 5.0;
 
-    float pythagoras(vec2 a, vec2 b) {
-      return sqrt((b.y - a.y) * (b.y - a.y) + (b.x - a.x) * (b.x - a.x));
-    }
-
-    // https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line#Line_defined_by_two_points
-    float distanceFromPointToLine(vec2 a, vec2 b, vec2 p) {
-      return abs((b.y - a.y) * p.x - (b.x - a.x) * p.y + b.x * a.y - b.y * a.x) / pythagoras(a, b);
-    }
-
-    // https://stackoverflow.com/questions/65282981/get-perpendicular-to-line-from-point
-    vec2 closestPointFromPointToLine(vec2 a, vec2 b, vec2 p) {
-      float dx = b.x - a.x;
-      float dy = b.y - a.y;
-      float dotp = dx * (p.x - a.x) + dy * (p.y - a.y);
-      float dot12 = dx * dx + dy * dy;
-      float coeff = dotp / dot12;
-
-      return vec2(
-        a.x + dx * coeff,
-        a.y + dy * coeff
-      );
-    }
-
-    vec2 reflect(vec2 pos, float rotationOffset) {
-      float theta = atan(pos.y, pos.x) + rotationOffset;
-      float sector = floor((theta) / (2.0 * PI) * sides);
-      float sectorThetaSize = (1.0 / sides) * PI * 2.0;
-      float sectorStartAngle = (sector - 0.0) * sectorThetaSize - rotationOffset;
-      float sectorEndAngle = (sector + 1.0) * sectorThetaSize - rotationOffset;
-      vec2 sectorStartPoint = vec2(
-        cos(sectorStartAngle),
-        sin(sectorStartAngle)
-      );
-      vec2 sectorEndPoint = vec2(
-        cos(sectorEndAngle),
-        sin(sectorEndAngle)
-      );
-      vec2 closestPointFromPointToSectorLine = closestPointFromPointToLine(
-        sectorStartPoint,
-        sectorEndPoint,
-        pos
-      );
-      float distanceFromPointToSectorLine = distanceFromPointToLine(
-        sectorStartPoint,
-        sectorEndPoint,
-        pos
-      );
-      if (pythagoras(closestPointFromPointToSectorLine, vec2(0.0,0.0)) < pythagoras(pos, vec2(0.0, 0.0))) {
-        float angleToPerpendicular = atan(pos.y - closestPointFromPointToSectorLine.y, pos.x - closestPointFromPointToSectorLine.x);
-        // k.x -= cos(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
-        // k.y -= sin(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
-        return vec2(
-          pos.x - cos(angleToPerpendicular) * distanceFromPointToSectorLine * 2.0,
-          pos.y - sin(angleToPerpendicular) * distanceFromPointToSectorLine * 2.0
-        );
-        // return vec2(
-        //   pos.x + (closestPointFromPointToSectorLine.x - pos.x) * 2.0,
-        //   pos.y + (closestPointFromPointToSectorLine.y - pos.y) * 2.0
-        // );
-      } else {
-        return pos;
-      }
-    }
-
     float distanceFromRayToMirror(
       vec2 rayPos,
       vec2 rayDir,
@@ -145,18 +81,6 @@ onMounted(() => {
       return -1.0;
     }
 
-    // vec2 rayIntersectsMirrorAt(
-    //   vec2 rayPos,
-    //   vec2 rayDir,
-    //   vec2 mirrorPointA,
-    //   vec2 mirrorPointB
-    // ) {
-    //   return vec2(
-    //     0.0,
-    //     0.0
-    //   );
-    // }
-
     vec2 reflectRayOnMirror(
       vec2 rayDir,
       vec2 mirrorPointA,
@@ -171,34 +95,16 @@ onMounted(() => {
       return rayDir - 2.0 * dot(rayDir, n) * n;
     }
 
-    bool onMirror(vec2 pos, float rotationOffset) {
-      float theta = atan(pos.y, pos.x) + rotationOffset;
-      float sector = floor((theta) / (2.0 * PI) * sides);
-      float sectorThetaSize = (1.0 / sides) * PI * 2.0;
-      float sectorStartAngle = (sector - 0.0) * sectorThetaSize - rotationOffset;
-      float sectorEndAngle = (sector + 1.0) * sectorThetaSize - rotationOffset;
-      vec2 sectorStartPoint = vec2(
-        cos(sectorStartAngle),
-        sin(sectorStartAngle)
-      );
-      vec2 sectorEndPoint = vec2(
-        cos(sectorEndAngle),
-        sin(sectorEndAngle)
-      );
-      vec2 closestPointFromPointToSectorLine = closestPointFromPointToLine(
-        sectorStartPoint,
-        sectorEndPoint,
-        pos
-      );
-      float distanceFromPointToSectorLine = distanceFromPointToLine(
-        sectorStartPoint,
-        sectorEndPoint,
-        pos
-      );
-      return pythagoras(closestPointFromPointToSectorLine, vec2(0.0,0.0)) < pythagoras(pos, vec2(0.0, 0.0));
-    }
-
     void main() {
+      // Control how much the mirrors should be rotated.
+      float rotationOffset = -PI / 10.0;
+      if (sides < 5.0) {
+        rotationOffset = -PI / 4.0;
+      }
+      if (sides < 4.0) {
+        rotationOffset = -PI / 2.0;
+      }
+
       // Normalise coordinate space to be letterboxed.
       float elementDimensionsRatio = elementDimensions.x / elementDimensions.y;
       vec2 k = vec2(gl_FragCoord.x, gl_FragCoord.y);
@@ -221,43 +127,14 @@ onMounted(() => {
       k.x -= 0.5;
       k.y -= 0.5;
 
-      // Todo: Control the scale of the image at this stage.
+      // Control the scale of the image at this stage.
       k.x *= scale;
       k.y *= scale;
-
-      // Todo: Control the rotation of the image.
-      float rotationOffset = -PI / 10.0;
-      if (sides < 5.0) {
-        rotationOffset = -PI / 4.0;
-      }
-      if (sides < 4.0) {
-        rotationOffset = -PI / 2.0;
-      }
-      // k = vec2(
-      //   k.x * cos(rotationOffset) - k.y * sin(rotationOffset),
-      //   k.x * sin(rotationOffset) + k.y * cos(rotationOffset)
-      // );
-
-      // Debug: Draw a circle.
-      // if (sqrt(k.x * k.x + k.y * k.y) > 1.0) {
-      //   gl_FragColor=vec4(k.x, k.y, 0.5, 0.001);
-      //   return;
-      // }
 
       // Initialise the ray.
       vec2 rayPos = vec2(0.0);
       vec2 rayDir = k;
       float surfaceAlpha = 0.0;
-
-      // gl_FragColor=vec4(abs(rayDir.x) - 1.0, abs(rayDir.y) - 1.0, 0.0, 1.0);
-
-      // float xDistance = distanceFromRayToMirror(rayPos, rayDir, vec2(-10.0, 2.0), vec2(10.0, 2.0));
-      // if (xDistance > 1.0) {
-      //   gl_FragColor=vec4(1.0, 0.0, xDistance, 1.0);
-      // } else {
-      //   gl_FragColor=vec4(1.0, 0.0, 0.0, 1.0);
-      // }
-      // return;
 
       // Compute how light should reflect across the various mirrors.
       for (int reflections = 0; reflections < 1000; reflections++) {
@@ -296,16 +173,6 @@ onMounted(() => {
           }
         }
 
-        // if (nearestIntersectionDistance < length(rayDir)) {
-        //   gl_FragColor=vec4(1.0, 1.0, 0.0, 1.0);
-        //   return;
-        // }
-
-        // if (nearestIntersectionDistance < 0.0) {
-        //   gl_FragColor=vec4(1.0, 1.0, 1.0, 1.0);
-        //   return;
-        // }
-
         // If the rayDir is not long enough to reflect light at
         // the nearest intersection, then increment the position to the final length of the ray,
         // then stop the calculation.
@@ -327,80 +194,6 @@ onMounted(() => {
       }
 
       gl_FragColor=vec4((rayPos.x + 1.0) / 2.0, (rayPos.y + 1.0) / 2.0, 0.0, surfaceAlpha);
-
-      // Debug: Draw a triangle.
-      // float offset2 = rotationOffset;
-      // float theta = atan(k.y, k.x) + offset2;
-      // float sector = floor((theta) / (2.0 * PI) * sides);
-      // float sectorThetaSize = (1.0 / sides) * PI * 2.0;
-      // float sectorStartAngle = (sector - 0.0) * sectorThetaSize - offset2;
-      // float sectorEndAngle = (sector + 1.0) * sectorThetaSize - offset2;
-      // vec2 sectorStartPoint = vec2(
-      //   cos(sectorStartAngle),
-      //   sin(sectorStartAngle)
-      // );
-      // vec2 sectorEndPoint = vec2(
-      //   cos(sectorEndAngle),
-      //   sin(sectorEndAngle)
-      // );
-
-      // Debug: Highlight sectorPoints
-      // if (
-      //   k.x < sectorStartPoint.x + 0.1 && k.x > sectorStartPoint.x - 0.1 &&
-      //   k.y < sectorStartPoint.y + 0.1 && k.y > sectorStartPoint.y - 0.1
-      // ) {
-      //   gl_FragColor=vec4(0.0, 1.0, 1.0, 1.0);
-      //   return;
-      // }
-      // if (
-      //   k.x < sectorEndPoint.x + 0.1 && k.x > sectorEndPoint.x - 0.1 &&
-      //   k.y < sectorEndPoint.y + 0.1 && k.y > sectorEndPoint.y - 0.1
-      // ) {
-      //   gl_FragColor=vec4(1.0, 0.0, 1.0, 1.0);
-      //   return;
-      // }
-      //
-      // vec2 closestPointFromPointToSectorLine = closestPointFromPointToLine(
-      //   sectorStartPoint,
-      //   sectorEndPoint,
-      //   k
-      // );
-      // float distanceFromPointToSectorLine = distanceFromPointToLine(
-      //   sectorStartPoint,
-      //   sectorEndPoint,
-      //   k
-      // );
-      // if (pythagoras(closestPointFromPointToSectorLine, vec2(0.0,0.0)) < pythagoras(k, vec2(0.0, 0.0))) {
-      //   for(int i = 0; i < 1; i ++) {
-      //     if (i > maxReflections) {
-      //       break;
-      //     }
-      //     // float angleToPerpendicular = atan(k.y - closestPointFromPointToSectorLine.y, k.x - closestPointFromPointToSectorLine.x);
-      //     // k.x -= cos(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
-      //     // k.y -= sin(angleToPerpendicular) * distanceFromPointToSectorLine * 0.1;
-      //
-      //     k = reflect(k, rotationOffset);
-      //     k = reflect(k, rotationOffset);
-      //     // k = reflect(k, rotationOffset);
-      //     // k = reflect(k, rotationOffset);
-      //     // k.x += (closestPointFromPointToSectorLine.x - k.x) * 2.0;
-      //     // k.y += (closestPointFromPointToSectorLine.y - k.y) * 2.0;
-      //     // k.x = 0.0;
-      //     // k.x = 0.0;
-      //   }
-      //
-      // } else {
-      //   // gl_FragColor=vec4(abs(k.x), abs(k.y), 0.0, 1.0);
-      // }
-
-      // Are we still
-      // if (onMirror(k, rotationOffset)) {
-      //   gl_FragColor=vec4(0.0, 0.0, 0.0, 0.0);
-      //   return;
-      // }
-
-      //gl_FragColor=vec4((k.x), (k.y), 0.0, 1.0);
-      // gl_FragColor=vec4((k.x + 1.0) / 2.0, (k.y + 1.0) / 2.0, 0.0, 1.0);
     }
   `);
   gl.compileShader(fshader);
