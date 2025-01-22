@@ -48,7 +48,8 @@ onMounted(() => {
 
     uniform vec2 canvasDimensions;
     uniform vec2 elementDimensions;
-    int maxReflections = 3;
+    int maxReflections = 100;
+    float scale = 30.0;
     float sides = 5.0;
 
     float pythagoras(vec2 a, vec2 b) {
@@ -124,17 +125,17 @@ onMounted(() => {
       // https://stackoverflow.com/questions/53893292/how-to-calculate-ray-line-segment-intersection-preferably-in-opencv-and-get-its
       vec2 v1 = rayPos - mirrorPointA;
       vec2 v2 = mirrorPointB - mirrorPointA;
-      vec2 v3 = vec2(
+      vec2 v3 = normalize(vec2(
         -rayDir.y,
         rayDir.x
-      );
+      ));
 
       float dotProd = dot(v2, v3);
       if (abs(dotProd) < 0.000001) {
         return -1.0;
       }
 
-      float t1 = v2.x * v1.y - v2.y * v1.x / dotProd;
+      float t1 = (v2.x * v1.y - v2.y * v1.x) / dotProd;
       float t2 = dot(v1, v3) / dotProd;
 
       if (t1 >= 0.0 && (t2 >= 0.0 && t2 <= 1.0)) {
@@ -163,8 +164,8 @@ onMounted(() => {
     ) {
       // https://math.stackexchange.com/questions/13261/how-to-get-a-reflection-vector
       vec2 n = normalize(vec2(
-        -rayDir.y,
-        rayDir.x
+        -(mirrorPointB - mirrorPointA).y,
+        (mirrorPointB - mirrorPointA).x
       ));
 
       return rayDir - 2.0 * dot(rayDir, n) * n;
@@ -219,11 +220,8 @@ onMounted(() => {
       // A coordinate range from -1 to +1 is now shown.
       k.x -= 0.5;
       k.y -= 0.5;
-      k.x *= 2.0;
-      k.y *= 2.0;
 
       // Todo: Control the scale of the image at this stage.
-      float scale = 10.0;
       k.x *= scale;
       k.y *= scale;
 
@@ -253,9 +251,17 @@ onMounted(() => {
 
       // gl_FragColor=vec4(abs(rayDir.x) - 1.0, abs(rayDir.y) - 1.0, 0.0, 1.0);
 
+      // float xDistance = distanceFromRayToMirror(rayPos, rayDir, vec2(-10.0, 2.0), vec2(10.0, 2.0));
+      // if (xDistance > 1.0) {
+      //   gl_FragColor=vec4(1.0, 0.0, xDistance, 1.0);
+      // } else {
+      //   gl_FragColor=vec4(1.0, 0.0, 0.0, 1.0);
+      // }
+      // return;
+
       // Compute how light should reflect across the various mirrors.
-      for (int reflections = 0; reflections < 2; reflections++) {
-        if (reflections > maxReflections + 1) {
+      for (int reflections = 0; reflections < 1000; reflections++) {
+        if (reflections > maxReflections) {
           break;
         }
         // Test for plane intersections. By default,
@@ -264,17 +270,17 @@ onMounted(() => {
         vec2 nearestMirrorPointA = vec2(0.0);
         vec2 nearestMirrorPointB = vec2(0.0);
         float nearestIntersectionDistance = -1.0;
-        for (float side = 0.0; side < 10.0; side++) {
+        for (float side = 0.0; side < 100.0; side++) {
           if (side > sides) {
             continue;
           }
           vec2 mirrorPointA = vec2(
-            cos((side - 0.5) * 2.0 * PI / sides),
-            sin((side - 0.5) * 2.0 * PI / sides)
+            cos((side - 1.0) * 2.0 * PI / sides + rotationOffset),
+            sin((side - 1.0) * 2.0 * PI / sides + rotationOffset)
           );
           vec2 mirrorPointB = vec2(
-            cos((side + 0.5) * 2.0 * PI / sides),
-            sin((side + 0.5) * 2.0 * PI / sides)
+            cos((side) * 2.0 * PI / sides + rotationOffset),
+            sin((side) * 2.0 * PI / sides + rotationOffset)
           );
           // Does the ray intersect the side/mirror?
           float intersectionDistance = distanceFromRayToMirror(
@@ -283,24 +289,34 @@ onMounted(() => {
             mirrorPointA,
             mirrorPointB
           );
-          if (intersectionDistance >= 0.0 && (nearestIntersectionDistance < intersectionDistance || nearestIntersectionDistance < 0.0)) {
+          if (intersectionDistance >= 0.0 && (intersectionDistance < nearestIntersectionDistance || nearestIntersectionDistance < 0.0)) {
             nearestIntersectionDistance = intersectionDistance;
             nearestMirrorPointA = mirrorPointA;
             nearestMirrorPointB = mirrorPointB;
           }
         }
+
+        // if (nearestIntersectionDistance < length(rayDir)) {
+        //   gl_FragColor=vec4(1.0, 1.0, 0.0, 1.0);
+        //   return;
+        // }
+
+        // if (nearestIntersectionDistance < 0.0) {
+        //   gl_FragColor=vec4(1.0, 1.0, 1.0, 1.0);
+        //   return;
+        // }
+
         // If the rayDir is not long enough to reflect light at
         // the nearest intersection, then increment the position to the final length of the ray,
         // then stop the calculation.
-        float rayToMirrorLength = nearestIntersectionDistance;
         float rayLength = length(rayDir);
-        if (rayToMirrorLength >= rayLength) {
+        if (nearestIntersectionDistance >= rayLength) {
           rayPos += rayDir;
           surfaceAlpha = 1.0;
           break;
         }
-        rayPos += normalize(rayDir) * nearestIntersectionDistance;
-        rayDir *= (rayLength - rayToMirrorLength) / rayLength;
+        rayPos += normalize(rayDir) * nearestIntersectionDistance * 0.999;
+        rayDir = normalize(rayDir) * (length(rayDir) - nearestIntersectionDistance);
 
         // Reflect the ray off of the mirror
         rayDir = reflectRayOnMirror(
@@ -310,7 +326,7 @@ onMounted(() => {
         );
       }
 
-      gl_FragColor=vec4(abs(rayPos.x) - 1.0, abs(rayPos.y) - 1.0, 0.0, surfaceAlpha);
+      gl_FragColor=vec4((rayPos.x + 1.0) / 2.0, (rayPos.y + 1.0) / 2.0, 0.0, surfaceAlpha);
 
       // Debug: Draw a triangle.
       // float offset2 = rotationOffset;
