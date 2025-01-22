@@ -6,11 +6,19 @@ import Switch from './components/Switch.vue';
 import Kaleidoscope from './components/Kaleidoscope.vue';
 
 const options = [
-    'None',
-    '1',
-    '2',
-    '3',
-    '4+',
+    'No Bounces',
+    '1st Bounce',
+    '2nd Bounce',
+    '3rd Bounce',
+    '4th+ Bounce',
+];
+
+const optionValues = [
+    0,
+    1,
+    2,
+    3,
+    100
 ];
 
 const selectedIndex = ref(0);
@@ -19,7 +27,9 @@ const showMirrorEdges = ref(false);
 </script>
 
 <template>
-  <Kaleidoscope />
+  <Kaleidoscope
+    :max-reflections="optionValues[selectedIndex]"
+  />
   <div
     class="absolute w-full flex flex-col justify-end gap-1 px-2 py-2 items-center"
     style="top:calc(env(safe-area-inset-top))"

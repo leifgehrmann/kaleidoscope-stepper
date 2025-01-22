@@ -1,6 +1,10 @@
 <script setup lang="ts">
 
-import {onMounted, ref, useTemplateRef} from 'vue';
+import {onMounted, ref, useTemplateRef, watch} from 'vue';
+
+const props = defineProps<{
+  maxReflections: number
+}>();
 
 const canvasRef = useTemplateRef('canvas');
 const canvasSize =  Math.max(1024, window.innerWidth, window.innerHeight) * window.devicePixelRatio;
@@ -17,11 +21,17 @@ function render() {
 
   const canvasDimensionsBind = gl.getUniformLocation(program, 'canvasDimensions');
   const elementDimensionsBind = gl.getUniformLocation(program, 'elementDimensions');
+  const maxReflectionsBind = gl.getUniformLocation(program, 'maxReflections');
   gl.uniform2f(canvasDimensionsBind, canvasSize, canvasSize);
   gl.uniform2f(elementDimensionsBind, canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height);
+  gl.uniform1i(maxReflectionsBind, props.maxReflections);
 
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
+
+watch(() => (props.maxReflections), () => {
+  render();
+});
 
 onMounted(() => {
   const canvas = canvasRef.value as HTMLCanvasElement;
@@ -48,8 +58,8 @@ onMounted(() => {
 
     uniform vec2 canvasDimensions;
     uniform vec2 elementDimensions;
-    int maxReflections = 100;
-    float scale = 30.0;
+    uniform int maxReflections;
+    float scale = 8.0;
     float sides = 5.0;
 
     float distanceFromRayToMirror(
@@ -193,7 +203,11 @@ onMounted(() => {
         );
       }
 
-      gl_FragColor=vec4((rayPos.x + 1.0) / 2.0, (rayPos.y + 1.0) / 2.0, 0.0, surfaceAlpha);
+      if (surfaceAlpha > 0.5) {
+        gl_FragColor=vec4((rayPos.x + 1.0) / 2.0, (rayPos.y + 1.0) / 2.0, 0.0, surfaceAlpha);
+      } else {
+        gl_FragColor=vec4(0.0, 0.0, 0.0, 0.0);
+      }
     }
   `);
   gl.compileShader(fshader);
