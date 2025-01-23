@@ -22,9 +22,15 @@ function render() {
   const canvasDimensionsBind = gl.getUniformLocation(program, 'canvasDimensions');
   const elementDimensionsBind = gl.getUniformLocation(program, 'elementDimensions');
   const maxReflectionsBind = gl.getUniformLocation(program, 'maxReflections');
+  const scaleBind = gl.getUniformLocation(program, 'scale');
+  const sidesBind = gl.getUniformLocation(program, 'sides');
+  const rotationOffsetBind = gl.getUniformLocation(program, 'rotationOffset');
   gl.uniform2f(canvasDimensionsBind, canvasSize, canvasSize);
   gl.uniform2f(elementDimensionsBind, canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height);
   gl.uniform1i(maxReflectionsBind, props.maxReflections);
+  gl.uniform1f(scaleBind, 9.0);
+  gl.uniform1f(sidesBind, 5);
+  gl.uniform1f(rotationOffsetBind, Math.PI / 2.0);
 
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
@@ -59,8 +65,9 @@ onMounted(() => {
     uniform vec2 canvasDimensions;
     uniform vec2 elementDimensions;
     uniform int maxReflections;
-    float scale = 8.0;
-    float sides = 5.0;
+    uniform float scale;
+    uniform float sides;
+    uniform float rotationOffset;
 
     float distanceFromRayToMirror(
       vec2 rayPos,
@@ -106,15 +113,6 @@ onMounted(() => {
     }
 
     void main() {
-      // Control how much the mirrors should be rotated.
-      float rotationOffset = -PI / 10.0;
-      if (sides < 5.0) {
-        rotationOffset = -PI / 4.0;
-      }
-      if (sides < 4.0) {
-        rotationOffset = -PI / 2.0;
-      }
-
       // Normalise coordinate space to be letterboxed.
       float elementDimensionsRatio = elementDimensions.x / elementDimensions.y;
       vec2 k = vec2(gl_FragCoord.x, gl_FragCoord.y);
@@ -145,6 +143,20 @@ onMounted(() => {
       vec2 rayPos = vec2(0.0);
       vec2 rayDir = k;
       float surfaceAlpha = 0.0;
+
+      vec2 rangeBottomLeft = vec2(0.0);
+      vec2 rangeTopRight = vec2(0.0);
+      for (float side = 0.0; side < 100.0; side++) {
+        if (side > sides) {
+          continue;
+        }
+        float x = cos((side) * 2.0 * PI / sides + rotationOffset);
+        float y = sin((side) * 2.0 * PI / sides + rotationOffset);
+        rangeBottomLeft.x = min(rangeBottomLeft.x, x);
+        rangeBottomLeft.y = min(rangeBottomLeft.y, y);
+        rangeTopRight.x = max(rangeTopRight.x, x);
+        rangeTopRight.y = max(rangeTopRight.y, y);
+      }
 
       // Compute how light should reflect across the various mirrors.
       for (int reflections = 0; reflections < 1000; reflections++) {
@@ -203,8 +215,16 @@ onMounted(() => {
         );
       }
 
+      // Normalize the coordinate space so
+      vec2 imagePos = rayPos;
+      float rangeDx = rangeTopRight.x - rangeBottomLeft.x;
+      float rangeDy = rangeTopRight.y - rangeBottomLeft.y;
+      float rangeScale = 1.0 / min(rangeDx, rangeDy);
+      imagePos -= rangeBottomLeft;
+      imagePos *= rangeScale;
+
       if (surfaceAlpha > 0.5) {
-        gl_FragColor=vec4((rayPos.x + 1.0) / 2.0, (rayPos.y + 1.0) / 2.0, 0.0, surfaceAlpha);
+        gl_FragColor=vec4(imagePos.x, imagePos.y, 0.0, surfaceAlpha);
       } else {
         gl_FragColor=vec4(0.0, 0.0, 0.0, 0.0);
       }
