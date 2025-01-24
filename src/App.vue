@@ -4,6 +4,7 @@ import SegmentedControl from './components/SegmentedControl.vue';
 import {ref} from 'vue';
 import Switch from './components/Switch.vue';
 import Kaleidoscope from './components/Kaleidoscope.vue';
+import RayTrace from "./components/RayTrace.vue";
 
 const options = [
     'No Bounces',
@@ -28,6 +29,9 @@ const showMirrorEdges = ref(false);
 
 <template>
   <Kaleidoscope
+    :max-reflections="optionValues[selectedIndex]"
+  />
+  <RayTrace
     :max-reflections="optionValues[selectedIndex]"
   />
   <div

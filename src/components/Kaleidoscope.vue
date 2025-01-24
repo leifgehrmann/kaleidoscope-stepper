@@ -263,11 +263,6 @@ window.addEventListener('resize', () => {
     class="bg-gray-200 dark:bg-gray-900"
     style="width:100dvw;height:100dvh;"
   />
-  <canvas
-    ref="outlines"
-    class="absolute left-0 top-0"
-    style="width:100dvw;height:100dvh;"
-  />
 </template>
 
 <style scoped>
