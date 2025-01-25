@@ -210,7 +210,7 @@ onMounted(() => {
             bg-white
             dark:bg-white
             dark:bg-opacity-20
-            rounded-md
+            rounded-lg
             shadow-lg
             dark:shadow-lg
             transform
@@ -259,7 +259,7 @@ onMounted(() => {
           v-if="item !== null"
           type="button"
           class="
-            py-2 rounded-md
+            py-2 rounded-lg
             overflow-hidden overflow-ellipsis
             transform transition ease-out duration-300
           "
