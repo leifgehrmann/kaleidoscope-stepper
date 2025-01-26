@@ -114,7 +114,7 @@ onMounted(() => {
 
     void main() {
       // Normalise coordinate space to be letterboxed.
-      float elementDimensionsRatio = elementDimensions.x / elementDimensions.y;
+      float elementDimensionsRatio = elementDimensions.x / (elementDimensions).y;
       vec2 k = vec2(gl_FragCoord.x, gl_FragCoord.y);
       k /= canvasDimensions;
       if (elementDimensionsRatio > 1.0) {
@@ -122,7 +122,8 @@ onMounted(() => {
         k.x -= (elementDimensionsRatio - 1.0) * 0.5;
       } else {
         k.y /= elementDimensionsRatio;
-        k.y -= (1.0 - elementDimensionsRatio) * 0.5;
+        // k.y -= (1.0 - elementDimensionsRatio);
+        k.y -= 0.5 / elementDimensionsRatio - 0.5;
       }
       // Debug: Show outline of the letterbox.
       // if (k.x < 0.001 || k.x > 0.999 || k.y < 0.001 || k.y > 0.999) {
