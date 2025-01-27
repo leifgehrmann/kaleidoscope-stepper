@@ -3,7 +3,10 @@
 import {onMounted, ref, useTemplateRef, watch} from 'vue';
 
 const props = defineProps<{
-  maxReflections: number
+  maxReflections: number,
+  sides: number,
+  scale: number,
+  rotationOffset: number,
 }>();
 
 const canvasRef = useTemplateRef('canvas');
@@ -28,9 +31,9 @@ function render() {
   gl.uniform2f(canvasDimensionsBind, canvasSize, canvasSize);
   gl.uniform2f(elementDimensionsBind, canvas.getBoundingClientRect().width, canvas.getBoundingClientRect().height);
   gl.uniform1i(maxReflectionsBind, props.maxReflections);
-  gl.uniform1f(scaleBind, 9.0);
-  gl.uniform1f(sidesBind, 5);
-  gl.uniform1f(rotationOffsetBind, Math.PI / 2.0);
+  gl.uniform1f(scaleBind, props.scale);
+  gl.uniform1f(sidesBind, props.sides);
+  gl.uniform1f(rotationOffsetBind, props.rotationOffset);
 
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 }

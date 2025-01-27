@@ -21,6 +21,9 @@ const optionValues = [
     100
 ];
 
+const scale = ref(9.0);
+const sides = ref(5);
+const rotationOffset = ref(Math.PI / 2.0);
 const selectedIndex = ref(0);
 
 </script>
@@ -28,9 +31,15 @@ const selectedIndex = ref(0);
 <template>
   <Kaleidoscope
     :max-reflections="optionValues[selectedIndex]"
+    :rotation-offset="rotationOffset"
+    :scale="scale"
+    :sides="sides"
   />
   <RayTrace
     :max-reflections="optionValues[selectedIndex]"
+    :rotation-offset="rotationOffset"
+    :scale="scale"
+    :sides="sides"
   />
   <div
     class="absolute w-full flex flex-col justify-end gap-1 px-2 py-2 items-center"

@@ -3,7 +3,10 @@
 import {onMounted, ref, useTemplateRef, watch} from 'vue';
 
 const props = defineProps<{
-  maxReflections: number
+  maxReflections: number,
+  sides: number,
+  scale: number,
+  rotationOffset: number,
 }>();
 
 interface Point {
