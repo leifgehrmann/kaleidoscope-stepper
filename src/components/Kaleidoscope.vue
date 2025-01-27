@@ -220,7 +220,7 @@ onMounted(() => {
       vec2 imagePos = rayPos;
       float rangeDx = rangeTopRight.x - rangeBottomLeft.x;
       float rangeDy = rangeTopRight.y - rangeBottomLeft.y;
-      float rangeScale = 1.0 / min(rangeDx, rangeDy);
+      float rangeScale = 1.0 / max(rangeDx, rangeDy);
       imagePos -= rangeBottomLeft;
       imagePos *= rangeScale;
 
