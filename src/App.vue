@@ -77,28 +77,14 @@ if (!showBounces.value) {
         items-center
         p-1
         relative
-
-        dark:shadow-none
-        backdrop-blur-xl
         rounded-xl
         text-sm
         overflow-hidden
         justify-between
         gap-2
 
-        w-full flex flex-row
-        items-center
-        p-1
-        relative
-        bg-neutral-200/80
-        shadow
-        dark:bg-black/80
-        dark:shadow-none
-        backdrop-blur-xl
-        text-sm
-        overflow-hidden
-        justify-between
-        gap-2
+        bg-neutral-200
+        dark:bg-gray-800
       "
     >
       <SegmentedControl
