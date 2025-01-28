@@ -25,6 +25,30 @@ const scale = ref(9.0);
 const sides = ref(5);
 const rotationOffset = ref(Math.PI / 2.0);
 const selectedIndex = ref(0);
+const showBounces = ref(true);
+
+const urlParams = new URLSearchParams(window.location.search);
+const scaleParam = urlParams.get('z');
+const sidesParam = urlParams.get('s');
+const rotationOffsetParam = urlParams.get('r');
+const hideBouncesParam = urlParams.get('h');
+
+if (scaleParam !== null && !Number.isNaN(Number.parseFloat(scaleParam))) {
+  scale.value = Number.parseFloat(scaleParam);
+}
+if (sidesParam !== null && !Number.isNaN(Number.parseFloat(sidesParam))) {
+  sides.value = Number.parseFloat(sidesParam);
+}
+if (rotationOffsetParam !== null && !Number.isNaN(Number.parseFloat(rotationOffsetParam))) {
+  rotationOffset.value = Number.parseFloat(rotationOffsetParam) * Math.PI / 180;
+}
+if (hideBouncesParam !== null) {
+  showBounces.value = false;
+}
+
+if (!showBounces.value) {
+  selectedIndex.value = optionValues.length - 1;
+}
 
 </script>
 
@@ -42,6 +66,7 @@ const selectedIndex = ref(0);
     :sides="sides"
   />
   <div
+    v-if="showBounces"
     class="absolute w-full flex flex-col justify-end gap-1 px-2 py-2 items-center"
     style="bottom:calc(env(safe-area-inset-bottom))"
   >
