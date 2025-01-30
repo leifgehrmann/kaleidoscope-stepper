@@ -2,7 +2,10 @@
 
 import {onMounted, ref, useTemplateRef, watch} from 'vue';
 
+const emit = defineEmits(['update:showRayTrace']);
+
 const props = defineProps<{
+  showRayTrace: boolean,
   maxReflections: number,
   sides: number,
   scale: number,
@@ -15,12 +18,13 @@ interface Point {
 }
 
 const viewbox = ref('0 0 100 100');
+const mouseDownStartedOnSvg = ref(false);
+const rayPos = ref(null as Point|null);
 const rayD = ref(null as string|null);
 const mouseD = ref(null as string|null);
 const mirrorD = ref(null as string|null);
-const circleXDebug = ref(0);
-const circleYDebug = ref(0);
-const circleRDebug = ref(0);
+const rayEnd = ref(null as Point|null);
+const mouseEnd = ref(null as Point|null);
 const svgRef = useTemplateRef('svg');
 
 function screenToCanvas(screen: DOMRect, p: Point) {
@@ -230,7 +234,7 @@ function computeReflections(rayStartDir: Point, maxReflections: number, sides: n
   return reflectionPoints;
 }
 
-function render(rayPos: Point|null) {
+function render() {
   if (svgRef.value === null) {
     return;
   }
@@ -238,21 +242,17 @@ function render(rayPos: Point|null) {
   const svgRect = svg.getBoundingClientRect();
   viewbox.value = `0 0 ${svgRect.width} ${svgRect.height}`;
 
-  const testPoint = screenToCanvas(svgRect, {x: svgRect.width/2, y: svgRect.height/2});
-  const circlePoint = canvasToScreen(svgRect, testPoint);
-  circleXDebug.value = circlePoint.x;
-  circleYDebug.value = circlePoint.y;
-  circleRDebug.value = Math.min(svgRect.width/2, svgRect.height/2);
-
-  if (rayPos === null) {
+  if (rayPos.value === null) {
     rayD.value = null;
     mouseD.value = null;
     mirrorD.value = null;
+    rayEnd.value = null;
+    mouseEnd.value = null;
     return;
   }
 
   const reflectionPoints = computeReflections(
-    screenToCanvas(svgRect, rayPos),
+    screenToCanvas(svgRect, rayPos.value),
     props.maxReflections + 1,
     props.sides,
     props.rotationOffset,
@@ -262,11 +262,12 @@ function render(rayPos: Point|null) {
       .map((p) => `L ${p.x} ${p.y}`)
       .join(' ');
   rayD.value = `M ${svgRect.width/2} ${svgRect.height/2} ` + reflectionPath;
-  if (reflectionPoints.length > 0) {
-    mouseD.value = `M ${reflectionPoints[0].x} ${reflectionPoints[0].y} L ${rayPos.x} ${rayPos.y}`;
-  } else {
-    mouseD.value = null;
-  }
+  rayEnd.value = {
+    x: reflectionPoints[reflectionPoints.length - 1].x,
+    y: reflectionPoints[reflectionPoints.length - 1].y
+  };
+  mouseD.value = `M ${reflectionPoints[0].x} ${reflectionPoints[0].y} L ${rayPos.value.x} ${rayPos.value.y}`;
+  mouseEnd.value = rayPos.value;
 
   const mirrorPath = computeMirrors(
       props.maxReflections,
@@ -279,27 +280,41 @@ function render(rayPos: Point|null) {
 }
 
 watch(() => (props.maxReflections), () => {
-  render(null);
+  render();
+});
+
+watch(() => (props.showRayTrace), (v) => {
+  if (!v) {
+    rayPos.value = null;
+    render();
+  }
 });
 
 onMounted(() => {
-  render(null);
+  render();
 
   svgRef.value.addEventListener('mousedown', (e) => {
-    render({x: e.clientX, y: e.clientY});
+    mouseDownStartedOnSvg.value = true;
+    rayPos.value = {x: e.clientX, y: e.clientY};
+    emit('update:showRayTrace', true);
+    render();
   });
-  svgRef.value.addEventListener('mousemove', (e) => {
-    if (e.buttons) {
-      render({x: e.clientX, y: e.clientY});
+  window.addEventListener('mousemove', (e) => {
+    if (mouseDownStartedOnSvg.value) {
+      rayPos.value = {x: e.clientX, y: e.clientY};
+      emit('update:showRayTrace', true);
+      render();
     }
   });
-  svgRef.value.addEventListener('mouseup', (e) => {
-    render(null);
+  window.addEventListener('mouseup', (e) => {
+    mouseDownStartedOnSvg.value = false;
   });
 });
 
 window.addEventListener('resize', () => {
-  render(null);
+  emit('update:showRayTrace', false);
+  rayPos.value = null;
+  render();
 });
 
 </script>
@@ -307,20 +322,21 @@ window.addEventListener('resize', () => {
 <template>
   <svg
     ref="svg"
-    class="absolute left-0 top-0 active:cursor-crosshair"
+    class="absolute left-0 top-0 cursor-pointer active:cursor-grabbing"
     style="width:100dvw;height:100dvh;"
     :viewBox="viewbox"
   >
-<!--    <circle-->
-<!--      :cx="circleXDebug"-->
-<!--      :cy="circleYDebug"-->
-<!--      :r="circleRDebug"-->
-<!--      fill="none"-->
-<!--      stroke="#FFF"-->
-<!--      stroke-width="3"-->
-<!--      stroke-opacity="1"-->
-<!--      stroke-linecap="round"-->
-<!--    />-->
+    <path
+      v-if="mirrorD !== null"
+      :d="mirrorD"
+      fill="none"
+      stroke="#FFF"
+      stroke-dasharray="1, 4"
+      stroke-width="2"
+      stroke-opacity="1"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
     <path
       v-if="rayD !== null"
       :d="rayD"
@@ -341,20 +357,26 @@ window.addEventListener('resize', () => {
       stroke-linecap="round"
       stroke-linejoin="round"
     />
-    <path
-      v-if="mirrorD !== null"
-      :d="mirrorD"
-      fill="none"
-      stroke="#FFF"
-      stroke-dasharray="1, 4"
-      stroke-width="2"
-      stroke-opacity="1"
-      stroke-linecap="round"
-      stroke-linejoin="round"
+    <circle
+      v-if="rayEnd !== null"
+      :cx="rayEnd.x"
+      :cy="rayEnd.y"
+      r="4"
+      fill="#FFF"
+    />
+    <circle
+      v-if="mouseEnd !== null"
+      :cx="mouseEnd.x"
+      :cy="mouseEnd.y"
+      r="4"
+      fill="#0FF"
     />
   </svg>
 </template>
 
 <style scoped>
 
+svg {
+  filter: drop-shadow(1px 1px 2px rgb(0 0 0 / 0.7));
+}
 </style>

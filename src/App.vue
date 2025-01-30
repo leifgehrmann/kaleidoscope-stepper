@@ -26,6 +26,7 @@ const sides = ref(5);
 const rotationOffset = ref(Math.PI / 2.0);
 const selectedIndex = ref(0);
 const showBounces = ref(true);
+const showRayTrace = ref(false);
 
 const urlParams = new URLSearchParams(window.location.search);
 const scaleParam = urlParams.get('z');
@@ -64,7 +65,70 @@ if (!showBounces.value) {
     :rotation-offset="rotationOffset"
     :scale="scale"
     :sides="sides"
+    :show-ray-trace="showRayTrace"
+    @update:show-ray-trace="showRayTrace = $event"
   />
+  <transition
+    enter-active-class="duration-300 ease-in"
+    enter-from-class="transform opacity-0"
+    enter-to-class="opacity-100"
+    leave-active-class="duration-200 ease-out"
+    leave-from-class="opacity-100"
+    leave-to-class="transform opacity-0"
+  >
+    <div
+      v-if="showRayTrace"
+      class="absolute w-full flex flex-col justify-end gap-1 px-2 py-2 items-center pointer-events-none"
+      style="top:calc(env(safe-area-inset-top))"
+    >
+      <button
+        class="
+          flex flex-row
+          items-center
+          p-2
+          px-4
+          relative
+          rounded-xl
+          text-sm
+          overflow-hidden
+          justify-between
+          gap-2
+          shadow-md
+          dark:shadow-none
+          pointer-events-auto
+
+          bg-white
+          dark:bg-gray-800
+        "
+        @click="showRayTrace = false"
+      >
+        <svg
+          viewBox="0 0 10 10"
+          class="text-black dark:text-white h-3"
+        >
+          <line
+            x1="1"
+            x2="9"
+            y1="1"
+            y2="9"
+            stroke="currentcolor"
+            stroke-linecap="round"
+            stroke-width="1.25"
+          />
+          <line
+            x1="1"
+            x2="9"
+            y1="9"
+            y2="1"
+            stroke="currentcolor"
+            stroke-linecap="round"
+            stroke-width="1.25"
+          />
+        </svg>
+        Clear Ray Trace
+      </button>
+    </div>
+  </transition>
   <div
     v-if="showBounces"
     class="absolute w-full flex flex-col justify-end gap-1 px-2 py-2 items-center"
@@ -91,7 +155,7 @@ if (!showBounces.value) {
         class="w-full"
         :options="options"
         :selected-index="selectedIndex"
-        @update:selected-index="selectedIndex = $event"
+        @update:selected-index="selectedIndex = $event;"
       />
     </div>
   </div>
