@@ -19,6 +19,7 @@ interface Point {
 
 const viewbox = ref('0 0 100 100');
 const mouseDownStartedOnSvg = ref(false);
+const touchStartedOnSvg = ref(null as null|number);
 const rayPos = ref(null as Point|null);
 const rayD = ref(null as string|null);
 const mouseD = ref(null as string|null);
@@ -279,6 +280,15 @@ function render() {
   mirrorD.value = mirrorPath;
 }
 
+function getTouchById(touches: TouchList, id: number): Touch | null {
+  for (let i = 0; i < touches.length; i += 1) {
+    if (touches[i].identifier === id) {
+      return touches[i];
+    }
+  }
+  return null;
+}
+
 watch(() => (props.maxReflections), () => {
   render();
 });
@@ -309,6 +319,43 @@ onMounted(() => {
   window.addEventListener('mouseup', (e) => {
     mouseDownStartedOnSvg.value = false;
   });
+
+  svgRef.value.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    if (touchStartedOnSvg.value !== null) {
+      return;
+    }
+    const touch = e.changedTouches[0];
+    touchStartedOnSvg.value = touch.identifier;
+    rayPos.value = {x: touch.clientX, y: touch.clientY};
+    emit('update:showRayTrace', true);
+    render();
+  });
+  window.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (touchStartedOnSvg.value === null) {
+      return;
+    }
+    const touch = getTouchById(e.changedTouches, touchStartedOnSvg.value);
+    if (touch === null) {
+      return;
+    }
+    rayPos.value = {x: touch.clientX, y: touch.clientY};
+    emit('update:showRayTrace', true);
+    render();
+  });
+  const touchEnd = (e: TouchEvent) => {
+    if (touchStartedOnSvg.value === null) {
+      return;
+    }
+    const touch = getTouchById(e.changedTouches, touchStartedOnSvg.value);
+    if (touch === null) {
+      return;
+    }
+    touchStartedOnSvg.value = null;
+  }
+  window.addEventListener('touchend', touchEnd);
+  window.addEventListener('touchcancel', touchEnd);
 });
 
 window.addEventListener('resize', () => {
