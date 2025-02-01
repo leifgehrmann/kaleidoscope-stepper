@@ -26,6 +26,7 @@ const mouseD = ref(null as string|null);
 const mirrorD = ref(null as string|null);
 const rayEnd = ref(null as Point|null);
 const mouseEnd = ref(null as Point|null);
+const touchStart = ref(null as Point|null);
 const svgRef = useTemplateRef('svg');
 
 function screenToCanvas(screen: DOMRect, p: Point) {
@@ -327,7 +328,15 @@ onMounted(() => {
     }
     const touch = e.changedTouches[0];
     touchStartedOnSvg.value = touch.identifier;
-    rayPos.value = {x: touch.clientX, y: touch.clientY};
+    touchStart.value = {x: touch.clientX, y: touch.clientY};
+    if (rayPos.value === null) {
+      const svg = svgRef.value as SVGElement;
+      const svgRect = svg.getBoundingClientRect();
+      rayPos.value = {
+        x: svgRect.width / 2,
+        y: svgRect.height / 2
+      };
+    }
     emit('update:showRayTrace', true);
     render();
   });
@@ -337,10 +346,15 @@ onMounted(() => {
       return;
     }
     const touch = getTouchById(e.changedTouches, touchStartedOnSvg.value);
-    if (touch === null) {
+    if (touch === null || rayPos.value === null || touchStart.value === null) {
       return;
     }
-    rayPos.value = {x: touch.clientX, y: touch.clientY};
+
+    rayPos.value = {
+      x: rayPos.value.x + touch.clientX - touchStart.value.x,
+      y: rayPos.value.y + touch.clientY - touchStart.value.y
+    };
+    touchStart.value = {x: touch.clientX, y: touch.clientY};
     emit('update:showRayTrace', true);
     render();
   });
