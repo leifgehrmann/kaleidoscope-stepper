@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {onMounted, ref, useTemplateRef, watch} from 'vue';
+import {onMounted, Ref, ref, useTemplateRef, watch} from 'vue';
 
 const emit = defineEmits(['update:showRayTrace']);
 
@@ -27,7 +27,7 @@ const mirrorD = ref(null as string|null);
 const rayEnd = ref(null as Point|null);
 const mouseEnd = ref(null as Point|null);
 const touchStart = ref(null as Point|null);
-const svgRef = useTemplateRef('svg');
+const svgRef = useTemplateRef('svg') as Ref<SVGElement>;
 
 function screenToCanvas(screen: DOMRect, p: Point) {
   const elementDimensionsRatio = screen.width / screen.height;
@@ -160,7 +160,7 @@ function reflectRayOnMirror(
   return addPoint(rayDir, multScalar(n, -2.0 * dot(rayDir, n)));
 }
 
-function computeMirrors(maxReflections: number, sides: number, rotationOffset: number) {
+function computeMirrors(sides: number, rotationOffset: number) {
   const points = [];
   for (let side = 0; side < sides; side++) {
     const mirrorPointA = {
@@ -271,14 +271,12 @@ function render() {
   mouseD.value = `M ${reflectionPoints[0].x} ${reflectionPoints[0].y} L ${rayPos.value.x} ${rayPos.value.y}`;
   mouseEnd.value = rayPos.value;
 
-  const mirrorPath = computeMirrors(
-      props.maxReflections,
+  mirrorD.value = computeMirrors(
       props.sides,
       props.rotationOffset,
   ).map((p) => canvasToScreen(svgRect, p))
-    .map((p) => `L ${p.x} ${p.y}`)
+      .map((p) => `L ${p.x} ${p.y}`)
       .join(' ').replace('L', 'M');
-  mirrorD.value = mirrorPath;
 }
 
 function getTouchById(touches: TouchList, id: number): Touch | null {
@@ -317,7 +315,7 @@ onMounted(() => {
       render();
     }
   });
-  window.addEventListener('mouseup', (e) => {
+  window.addEventListener('mouseup', () => {
     mouseDownStartedOnSvg.value = false;
   });
 
@@ -367,7 +365,7 @@ onMounted(() => {
       return;
     }
     touchStartedOnSvg.value = null;
-  }
+  };
   window.addEventListener('touchend', touchEnd);
   window.addEventListener('touchcancel', touchEnd);
 });

@@ -99,12 +99,17 @@ if (!showBounces.value) {
 
           bg-white
           dark:bg-gray-800
+
+          text-black dark:text-white
+          active:text-black/80 dark:active:text-white/80
+
+          transition-colors ease-in
         "
         @click="showRayTrace = false"
       >
         <svg
           viewBox="0 0 10 10"
-          class="text-black dark:text-white h-3"
+          class="h-3"
         >
           <line
             x1="1"
