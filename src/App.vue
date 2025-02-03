@@ -22,8 +22,8 @@ const optionValues = [
 ];
 
 const scale = ref(9.0);
-const sides = ref(5);
-const rotationOffset = ref(Math.PI / 2.0);
+const sides = ref(4);
+const rotationOffset = ref(0);
 const selectedIndex = ref(0);
 const showBounces = ref(true);
 const showRayTrace = ref(false);
@@ -42,6 +42,14 @@ if (sidesParam !== null && !Number.isNaN(Number.parseFloat(sidesParam))) {
 }
 if (rotationOffsetParam !== null && !Number.isNaN(Number.parseFloat(rotationOffsetParam))) {
   rotationOffset.value = Number.parseFloat(rotationOffsetParam) * Math.PI / 180;
+} else {
+  if (sides.value % 2 === 1) {
+    rotationOffset.value = Math.PI / 2.0;
+  } else if ((sides.value / 2) % 2 === 1) {
+    rotationOffset.value = Math.PI / (sides.value / 2);
+  } else {
+    rotationOffset.value = Math.PI / sides.value;
+  }
 }
 if (hideBouncesParam !== null) {
   showBounces.value = false;
