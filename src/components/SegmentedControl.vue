@@ -233,19 +233,19 @@ onMounted(() => {
         :key="index"
       >
         <div
-            v-if="index > 0"
-            class="select-none py-2"
-            :style="{ width: gapWidth }"
+          v-if="index > 0"
+          class="select-none py-2"
+          :style="{ width: gapWidth }"
         >
           <span
-              class="
+            class="
                 mx-auto block
                 w-0.5 h-full
                 bg-black dark:bg-white
                 rounded-lg
                 transition-opacity ease-out duration-300
               "
-              :class="{
+            :class="{
               'opacity-10 dark:opacity-20': !(
                 (index - 1 === mountedSelectedIndex) || (index === mountedSelectedIndex)
               ),
