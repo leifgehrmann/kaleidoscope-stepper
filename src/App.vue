@@ -10,7 +10,7 @@ const options = [
     '1st Bounce',
     '2nd Bounce',
     '3rd Bounce',
-    '4th+ Bounce',
+    'Et Cetera…',
 ];
 
 const optionValues = [
