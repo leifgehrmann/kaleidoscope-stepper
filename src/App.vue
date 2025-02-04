@@ -86,8 +86,7 @@ if (!showBounces.value) {
   >
     <div
       v-if="showRayTrace"
-      class="absolute w-full flex flex-col justify-end gap-1 px-2 py-2 items-center pointer-events-none"
-      style="top:calc(env(safe-area-inset-top))"
+      class="absolute top-0 w-full flex flex-col justify-end gap-1 px-2 py-2 items-center pointer-events-none"
     >
       <button
         class="
@@ -144,8 +143,7 @@ if (!showBounces.value) {
   </transition>
   <div
     v-if="showBounces"
-    class="absolute w-full flex flex-col justify-end gap-1 px-2 py-2 items-center"
-    style="bottom:calc(env(safe-area-inset-bottom))"
+    class="absolute bottom-0 w-full flex flex-col justify-end gap-1 px-2 py-2 items-center"
   >
     <div
       ref="controls-bar"
