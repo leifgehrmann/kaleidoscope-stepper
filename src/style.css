@@ -37,7 +37,3 @@ html {
     @apply bg-black text-white;
   }
 }
-
-html, body {
-  overscroll-behavior: none;
-}
