@@ -11,7 +11,7 @@ A web-toy to explore how light reflects in a kaleidoscope.
 | `r`       | Rotational Offset | A number to control the rotation of the shape in the center of the screen. Measured in Degrees. Defaults to `0`.                                      |
 | `h`       | Hide Controls     | When set, the controls for the number of bounces are hidden. Disabled by default.                                                                     |
 
-Example:
+### Examples
 
 * Equilateral: https://kaleidoscope-stepper.leifgehrmann.com/?s=3.0
 * Isoceles: https://kaleidoscope-stepper.leifgehrmann.com/?s=2.6666
@@ -19,3 +19,20 @@ Example:
 * Pentagon: https://kaleidoscope-stepper.leifgehrmann.com/?s=5
 * Hexagon: https://kaleidoscope-stepper.leifgehrmann.com/?s=6
 * Example using all parameters, with controls disabled: https://kaleidoscope-stepper.leifgehrmann.com/?s=3&z=15&r=10&h
+
+## Development
+
+```shell
+# Assuming npm is installed on the machine, install the dependencies.
+npm install
+
+# Start a development server, with hot-reloading.
+npm run dev
+
+# Checks that code follows the style guide.
+npm run lint
+
+# Generate a publishable build in dist, and start a server that hosts the app.
+npm run build
+npm run preview
+```
