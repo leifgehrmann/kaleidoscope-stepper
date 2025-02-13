@@ -96,13 +96,14 @@ if (!showBounces.value) {
           px-4
           relative
           rounded-xl
-          text-sm
+          text-sm leading-5
           overflow-hidden
           justify-between
           gap-2
           shadow-md
           dark:shadow-none
           pointer-events-auto
+          cursor-pointer
 
           bg-white
           dark:bg-gray-800

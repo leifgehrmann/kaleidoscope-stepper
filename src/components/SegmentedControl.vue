@@ -197,9 +197,10 @@ onMounted(() => {
         class="
           transform
           transition-transform ease-out duration-300
+          translate-x-(--selected-option-position-left)
         "
         :style="{
-          '--tw-translate-x': selectedOptionPositionLeft,
+          '--selected-option-position-left': selectedOptionPositionLeft,
         }"
       >
         <div
@@ -208,8 +209,7 @@ onMounted(() => {
             p-2
             absolute
             bg-white
-            dark:bg-white
-            dark:bg-opacity-20
+            dark:bg-white/20
             rounded-lg
             shadow-lg
             dark:shadow-lg
@@ -262,6 +262,8 @@ onMounted(() => {
             py-2 rounded-lg
             overflow-hidden overflow-ellipsis
             transform transition ease-out duration-300
+            cursor-pointer
+            text-sm leading-5
           "
           :class="{
             'scale-95': (
