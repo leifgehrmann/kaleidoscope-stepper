@@ -260,7 +260,8 @@ onMounted(() => {
           type="button"
           class="
             py-2 rounded-lg
-            overflow-hidden overflow-ellipsis
+            overflow-hidden
+            text-ellipsis
             transform transition ease-out duration-300
             cursor-pointer
             text-sm leading-5
