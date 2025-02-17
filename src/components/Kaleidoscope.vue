@@ -10,7 +10,7 @@ const props = defineProps<{
 }>();
 
 const canvasRef = useTemplateRef('canvas');
-const canvasSize =  Math.max(1024, window.innerWidth, window.innerHeight) * window.devicePixelRatio;
+const canvasSize =  Math.max(1024, window.innerWidth, window.innerHeight);
 const webglRef = ref(null as null|WebGLRenderingContext);
 const webglProgramRef = ref(null as null|WebGLProgram);
 
